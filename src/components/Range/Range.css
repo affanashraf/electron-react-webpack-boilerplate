@@ -1,0 +1,45 @@
+.range_container {
+  background-color: #4d2307;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-weight: 600;
+  width: 95%;
+  height: 60%;
+  /*  */
+  display: flex;
+  flex-direction: column;
+}
+.range_list {
+  /*  */
+  background-color: grey;
+  overflow: auto;
+  height: 80%;
+  /* margin: 10px; */
+  width: 100%;
+  border: 2px solid white;
+}
+.range_err{
+  color: rgb(241, 182, 182);
+  font-size: 15px;
+  font-weight: 500;
+  width: 80%;
+  height: 100px;
+  overflow: scroll;
+  align-self: center;
+}
+.range_btn{
+  width: 50%;
+  align-self: center;
+  text-align: center;
+  padding: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  background-color: #002060;
+  color: white;
+  border: none;
+  outline: none;
+  margin: 10px;
+}
+.range_btn:hover{
+  background-color: white;
+  color: #002060;
+}

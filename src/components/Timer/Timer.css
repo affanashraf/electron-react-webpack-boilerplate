@@ -1,0 +1,34 @@
+.timer-container {
+  width: 250px;
+  height: 100px;
+  background-color: #4d2307;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 2px solid white;
+  align-self: center;
+}
+.timer-label {
+  margin: 10px;
+}
+.timer-btn {
+  outline: none;
+  border: none;
+  padding: 10px;
+  text-align: center;
+  background-color: grey;
+  color: black;
+  height: 60%;
+  width: 100%;
+  cursor: pointer;
+}
+.timer-btn:hover {
+  background-color: grey;
+  color: white;
+  
+}
+.time-input-field{
+  padding: 5px;
+  width: 100px;
+  height: 40%;
+}
