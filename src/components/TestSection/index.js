@@ -6,10 +6,7 @@ import TestSectionContext from "../contexts/TestSectionContext";
 import useTestSection from "../hooks/useTestSection";
 import _ from "lodash";
 //
-import Header from "./Components/Header";
-import Definition from "./Components/Definition";
 import Controls from "./Components/Controls";
-import DefOptions from "./Components/DefOptions";
 
 function TestSection() {
   //
@@ -28,6 +25,8 @@ function TestSection() {
     option,
     disabledOpt,
     disableDrill,
+    startedBefore,
+    stop,
     setRight,
     setWrong,
     setOpt_1,
@@ -78,17 +77,95 @@ function TestSection() {
   } = useContext(RangeContext);
   return (
     <div className="body_section">
-      <TestSectionContext.Provider value={{}}>
+      <TestSectionContext.Provider
+        value={{
+          stop,
+          drill,
+          startedBefore
+        }}
+      >
         {/* Header > Score, Title, Timer */}
-        <Header />
+        <div
+          style={{
+            width: "100%",
+            height: "200px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div className="test_score">
+            <h1>Score</h1>
+            <div style={{ display: "flex" }}>
+              <h2 className="score_lbl" style={{ backgroundColor: "green" }}>
+                {(start || startedBefore) ? right : 0}
+              </h2>
+              <h2 className="score_lbl" style={{ backgroundColor: "red" }}>
+                {(start || startedBefore) ? wrong : 0}
+              </h2>
+            </div>
+          </div>
+          <h1>Vocabulary Builder</h1>
+          <div className="timer-container">
+            <h1>{(start || startedBefore) ? timeCount : "Timer"}</h1>
+          </div>
+        </div>
         {/* Header */}
 
         {/* Definition */}
-        <Definition />
+        <div className="app_definition">
+          <p style={{ textAlign: "center" }}>{(start || startedBefore) ? def : "Definition"}</p>
+        </div>
         {/* Definition */}
 
         {/* Options */}
-        <DefOptions />
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            width: "60%",
+            alignSelf: "center",
+            marginTop: "20px",
+            justifyContent: "center",
+          }}
+        >
+          <button
+            className="app_def_option"
+            disabled={disabledOpt}
+            onClick={() => {
+              handleOption(opt_1);
+            }}
+          >
+            {(start || startedBefore) ? opt_1 : "A"}
+          </button>
+          <button
+            className="app_def_option"
+            disabled={disabledOpt}
+            onClick={() => {
+              handleOption(opt_2);
+            }}
+          >
+            {(start || startedBefore) ? opt_2 : "B"}
+          </button>
+          <button
+            className="app_def_option"
+            disabled={disabledOpt}
+            onClick={() => {
+              handleOption(opt_3);
+            }}
+          >
+            {(start || startedBefore) ? opt_3 : "C"}
+          </button>
+          <button
+            className="app_def_option"
+            disabled={disabledOpt}
+            onClick={() => {
+              handleOption(opt_4);
+            }}
+          >
+            {(start || startedBefore) ? opt_4 : "D"}
+          </button>
+        </div>
         {/* Options */}
 
         {/* Controls */}

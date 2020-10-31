@@ -5,7 +5,9 @@ import RangeContext from "../contexts/RangeContext";
 import GlobalContext from "../contexts/GlobalContext";
 function InputExcelCSV(props) {
   const { setTotalWords } = useContext(RangeContext);
-  const { setWords, setDefs,setImported, imported } = useContext(GlobalContext);
+  const { setWords, setDefs, setImported, imported } = useContext(
+    GlobalContext
+  );
   const [data, setData] = React.useState([]);
   const isValidFormat = (data) => {
     let row = data[0];
@@ -70,21 +72,23 @@ function InputExcelCSV(props) {
     <div
       style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
     >
-      <label htmlFor="inputData" style={{ fontSize: "20px", padding: "5px" }}>
-        Import Data
-      </label>
-      <input
-        className="input_csv_xlsx"
-        id="inputData"
-        disabled={imported}
-        placeholder="kghkggv"
-        type="file"
-        accept=".xlsx,.csv"
-        onChange={(e) => {
-          const file = e.target.files[0];
-          readExcelFile(file);
-        }}
-      />
+      <form id="csv_form" >
+        <label htmlFor="inputData" style={{ fontSize: "20px", padding: "5px" }}>
+          Import Data
+        </label>
+        <input
+          className="input_csv_xlsx"
+          id="inputData"
+          disabled={imported}
+          placeholder="kghkggv"
+          type="file"
+          accept=".xlsx,.csv"
+          onChange={(e) => {
+            const file = e.target.files[0];
+            readExcelFile(file);
+          }}
+        />
+      </form>
     </div>
   );
 }

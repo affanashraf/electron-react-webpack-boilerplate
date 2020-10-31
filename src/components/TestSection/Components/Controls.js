@@ -1,11 +1,12 @@
 import React, { useContext } from "react";
 import Dialog from "../../Utils/Dialog";
 import _ from "lodash";
-import fs from "fs";
+import fse from "fs-extra";
 import XLSX from "xlsx";
-import electron, { app } from "electron";
+import electron from "electron";
 import RangeContext from "../../contexts/RangeContext";
 import GlobalContext from "../../contexts/GlobalContext";
+import TestSectionContext from "../../contexts/TestSectionContext";
 function Controls(props) {
   const [data, setData] = React.useState();
   const [open, setOpen] = React.useState(false);
@@ -13,45 +14,67 @@ function Controls(props) {
   const handleClose = () => {
     setOpen(false);
   };
+  const { drill, stop } = useContext(TestSectionContext);
   const {
-    ranges,
-    setRanges,
-    setTotalWords,
     totalWords,
+    ranges,
+    poolIndexes,
+    addRange,
     setPoolIndexes,
+    setRanges,
+    selectRange,
+    unSelectRange,
+    findSelectedRanges,
+    setTotalWords,
   } = useContext(RangeContext);
   const {
     words,
     defs,
-    imported,
-    setImported,
+    time,
+    start,
     isSaved,
+    imported,
     setIsSaved,
+    setImported,
+    setStart,
+    setTime,
     setWords,
     setDefs,
   } = useContext(GlobalContext);
-  let operation;
-  const getJsonData = async () => {
-    let data;
-    try {
-      let res = await electron.remote.dialog.showOpenDialog({
-        filters: [{ name: "JSON File", extensions: ["json"] }],
-      });
-      console.log(res.filePaths[0]);
-      data = fs.readFileSync(res.filePaths[0], "utf8");
-      data = JSON.parse(data);
-    } catch (e) {
-      console.log(e);
-      return -1;
-    }
-    return data;
+  const getJsonData = () => {
+    let promise = new Promise((resolve, reject) => {
+      electron.remote.dialog
+        .showOpenDialog({
+          filters: [{ name: "JSON File", extensions: ["json"] }],
+        })
+        .then((res) => {
+          let path = res.filePaths[0];
+          let data = fse.readJSONSync(path);
+          resolve(data);
+        })
+        .catch((err) => reject(err));
+    });
+    return promise;
   };
   const setInitialSetup = (data) => {
     setRanges(data.ranges);
     setWords(data.words);
     setDefs(data.defs);
     setTotalWords(data.defs.length);
+    setImported(true);
+    console.log("SET STATE");
   };
+  const resetState = () => {
+    setRanges([]);
+    setWords([]);
+    setDefs([]);
+    setTotalWords(0);
+    setPoolIndexes([]);
+    setImported(false);
+    document.getElementById("csv_form").reset();
+    console.log("RESET STATE");
+  };
+  //
   const isValidFormat = (data) => {
     let row = data[0];
     let arr = _.keysIn(row);
@@ -96,7 +119,7 @@ function Controls(props) {
     setWords(words);
     setDefs(defs);
     setRanges([]);
-    setPoolIndexes([])
+    setPoolIndexes([]);
   };
   const readExcelFile = (file) => {
     let data;
@@ -120,89 +143,118 @@ function Controls(props) {
     }
     setGlobalData(response);
   };
-  const handleSave = async () => {
-    if (imported && !isSaved) {
-      let arr = ranges.map((range) => ({ ...range, selected: false }));
-      let data = {
-        ranges: arr,
-        words: words,
-        defs: defs,
-      };
-      let path = await electron.remote.dialog.showSaveDialog({
-        filters: [
-          {
-            name: "Json File",
-            extensions: ["json"],
-          },
-        ],
-      });
-      fs.writeFile(path.filePath, JSON.stringify(data), (err) => {
-        if (err !== null) {
-          alert(err.message);
-          return;
-        }
-        alert("Data stored successfully..");
-        setIsSaved(true);
-      });
-    } else {
-    }
+  //
+  const handleSave = (data) => {
+    let promise = new Promise(async (resolve, reject) => {
+      console.log("ENTER SAVE");
+      electron.remote.dialog
+        .showSaveDialog({
+          filters: [{ name: "JSON File", extensions: ["json"] }],
+        })
+        .then((res) => {
+          let path = res.filePath;
+          console.log(path);
+          fse.writeJSONSync(path, data);
+          resolve("WorkFile saved successfully...");
+        })
+        .catch((err) => reject(err));
+    });
+    return promise;
   };
   const handleNew = async () => {
-    if (!imported && !isSaved) {
-      let res = await electron.remote.dialog.showOpenDialog({
-        filters: [{ name: "CSV/XLSX File", extensions: ["csv", "xlsx"] }],
-      });
-      readExcelFile(res.filePaths[0]);
-    } else if (imported && isSaved) {
-      let res = await electron.remote.dialog.showOpenDialog({
-        filters: [{ name: "CSV/XLSX File", extensions: ["csv", "xlsx"] }],
-      });
-      readExcelFile(res.filePaths[0]);
-    } else if (imported && !isSaved) {
+    if (imported) {
       setOpen(true);
       setFunc("new");
     }
   };
-  const handleOpen = async () => {
-    if (!imported && !isSaved) {
-      // Open
-      let data = await getJsonData();
-      if (data !== -1 && data !== undefined) {
-        console.log(data);
-        setInitialSetup(data);
-        setImported(true);
-        // setIsSaved(true);
-      } else {
-        alert("No such file selected or data not found!!");
-        return;
-      }
-    } else if (imported && isSaved) {
-      // Open
-      let data = await getJsonData();
-      if (data !== -1 && data !== undefined) {
-        console.log(data);
-        setInitialSetup(data);
-      } else {
-        alert("No such file selected or data not found!!");
-      }
-    } else if (imported && !isSaved) {
-      // Save
+  const handleOpen = () => {
+    if (!imported) {
+      getJsonData()
+        .then((data) => {
+          resetState();
+          setInitialSetup(data);
+        })
+        .catch((err) => {
+          // Original state
+        });
+    } else if (imported) {
       setOpen(true);
       setFunc("open");
-      //   // Open
     }
   };
   const handleExit = () => {
-    if (imported && !isSaved) {
+    if (imported) {
       setOpen(true);
       setFunc("exit");
-    } else if (!imported) {
-      // Exit
+    } else {
       let w = electron.remote.getCurrentWindow();
       w.close();
     }
   };
-
+  //
+  const onYes = async () => {
+    let arr = ranges.map((range) => ({ ...range, selected: false }));
+    let data = {
+      ranges: arr,
+      words: words,
+      defs: defs,
+    };
+    if (func !== "" && func === "open") {
+      handleClose();
+      handleSave(data)
+        .then((res) => {
+          console.log(res);
+          getJsonData()
+            .then((data) => {
+              resetState();
+              setInitialSetup(data);
+            })
+            .catch((err) => {
+              // Original state
+            });
+        })
+        .catch((err) => {
+          // Origignal state
+        });
+    } else if (func !== "" && func === "new") {
+      handleClose();
+      handleSave(data)
+        .then((res) => {
+          resetState();
+        })
+        .catch((err) => {
+          // Original state
+        });
+    } else if (func !== "" && func === "exit") {
+      handleClose();
+      handleSave(data)
+        .then((res) => {
+          let w = electron.remote.getCurrentWindow();
+          w.close();
+        })
+        .catch((err) => {
+          // Original state
+        });
+    }
+  };
+  const onNo = async () => {
+    handleClose();
+    if (func !== "" && func === "open") {
+      getJsonData()
+        .then((data) => {
+          resetState();
+          setInitialSetup(data);
+        })
+        .catch((err) => {
+          // Original state
+        });
+    } else if (func !== "" && func === "new") {
+      resetState();
+    } else if (func !== "" && func === "exit") {
+      let w = electron.remote.getCurrentWindow();
+      w.close();
+    }
+  };
   return (
     <div
       style={{
@@ -216,11 +268,14 @@ function Controls(props) {
         className="circle_btn"
         disabled={props.disableDrill}
         onClick={() => {
-          console.log("drill");
-          props.drill();
+          if (!start) {
+            drill()
+          } else {
+            stop()
+          }
         }}
       >
-        Drill
+        {start ? "Stop" : "Drill"}
       </button>
       <button className="blue_btn" onClick={handleNew}>
         New Database
@@ -228,57 +283,32 @@ function Controls(props) {
       <button className="blue_btn" onClick={handleOpen}>
         Open Database
       </button>
-      <button className="blue_btn" onClick={handleSave}>
+      <button
+        className="blue_btn"
+        onClick={() => {
+          if (imported) {
+            let arr = ranges.map((range) => ({ ...range, selected: false }));
+            let data = {
+              ranges: arr,
+              words: words,
+              defs: defs,
+            };
+            handleSave(data)
+              .then((res) => {
+                resetState();
+              })
+              .catch((err) => {
+                // Original state
+              });
+          }
+        }}
+      >
         Save Database
       </button>
       <button className="circle_btn" onClick={handleExit}>
         Exit
       </button>
-      <Dialog
-        open={open}
-        onCancel={handleClose}
-        onYes={async () => {
-          await handleSave();
-          handleClose();
-          if (func !== "" && func === "open") {
-            let data = await getJsonData();
-            if (data !== -1 && data !== undefined) {
-              console.log(data);
-              setInitialSetup(data);
-            } else {
-              alert("No such file selected or data not found!!");
-            }
-          } else if (func !== "" && func === "new") {
-            let res = await electron.remote.dialog.showOpenDialog({
-              filters: [{ name: "CSV/XLSX File", extensions: ["csv", "xlsx"] }],
-            });
-            readExcelFile(res.filePaths[0]);
-          } else if (func !== "" && func === "exit") {
-            let w = electron.remote.getCurrentWindow(); 
-            w.close();
-          }
-        }}
-        onNo={async () => {
-          handleClose();
-          if (func !== "" && func === "open") {
-            let data = await getJsonData();
-            if (data !== -1 && data !== undefined) {
-              console.log(data);
-              setInitialSetup(data);
-            } else {
-              alert("No such file selected or data not found!!");
-            }
-          } else if (func !== "" && func === "new") {
-            let res = await electron.remote.dialog.showOpenDialog({
-              filters: [{ name: "CSV/XLSX File", extensions: ["csv", "xlsx"] }],
-            });
-            readExcelFile(res.filePaths[0]);
-          } else if (func !== "" && func === "exit") {
-            let w = electron.remote.getCurrentWindow();
-            w.close();
-          }
-        }}
-      />
+      <Dialog open={open} onCancel={handleClose} onYes={onYes} onNo={onNo} />
     </div>
   );
 }

@@ -1,9 +1,15 @@
-const _ = require("lodash");
+const fse = require("fs-extra");
+const { dialog } = require("electron").remote;
 
-let ranges = [
-  [{ name: "a" }, { name: "b" }],
-  [{ name: "b" }, { name: "c" }],
-  [{ name: "d" }, { name: "c" }],
-];
-
-console.log(_.unionBy(...ranges, "name"));
+dialog
+  .showSaveDialog({
+    filters: [
+      {
+        name: "Json File",
+        extensions: ["json"],
+      },
+    ],
+  })
+  .then((res) => console.log(res.filePath))
+  .catch((err) => console.log(err));
+// fse.writeJSONSync();

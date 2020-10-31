@@ -1,4 +1,4 @@
-.timer-container {
+/* .timer-container {
   width: 250px;
   height: 100px;
   background-color: #4d2307;
@@ -7,7 +7,7 @@
   align-items: center;
   border: 2px solid white;
   align-self: center;
-}
+} */
 .timer-label {
   margin: 10px;
 }

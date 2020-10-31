@@ -44,15 +44,16 @@ function useTestSection() {
   // Pool
   const [pool, setPool] = useState([]);
   // W&D Counter
-  const [counter, setCounter] = useState(undefined);
+  const [counter, setCounter] = useState(0);
   // Time Counter
-  const [timeCount, setTimeCount] = useState(undefined);
+  const [timeCount, setTimeCount] = useState(0);
   // Selected Option
   const [option, setOption] = useState("");
   // Options buttons disable
   const [disabledOpt, setDisabledOpt] = useState(true);
   //Drill button disable
   const [disableDrill, setDisableDrill] = useState(true);
+  const [startedBefore, setStartedBefore] = useState(false);
   //
   let timeout;
   //Initialize
@@ -73,50 +74,66 @@ function useTestSection() {
   };
   //
   const drill = () => {
-    setDisableDrill(true);
     if (pool.length > 4) {
       setStart(true);
       setTimeCount(time);
+      setStartedBefore(false);
       //
       setDisabledOpt(false);
       setDefinition();
-      setTimeout(() => {
-        setDefinition();
-      }, 5000);
+      // setTimeout(() => {
+      //   setDefinition();
+      // }, time * 1000);
     }
   };
+  const stop = () => {
+    clearTimeout(timeout);
+    setStart(false);
+    setStartedBefore(true);
+    // console.log("stop")
+  };
+  useEffect(() => {
+    if (start) {
+      timeout = setTimeout(() => {
+        if (timeCount === 0) {
+          setScore();
+          setTimeCount(time);
+          setDefinition();
+        } else if (timeCount > 0) {
+          setTimeCount(timeCount - 1);
+        }
+      }, 1000);
+    }
+  }, [timeCount, start]);
+
+  useEffect(() => {
+    init();
+  }, [poolIndexes, time]);
+
   //
   const setDefinition = () => {
+    console.log("Def**");
     if (pool.length > 4) {
-      console.log("Counter setted");
-      console.log("counter : " + counter);
       //
       let c = counter;
       let p = pool;
       if (counter === pool.length) {
         setCounter(0);
         c = 0;
-        // p = shuffle(pool);
-        // if (p[c] === pool[pool.length - 1]) {
-        //   c++;
-        // }
-        // setPool(_.shuffle(p));
       } else {
         setCounter(counter + 1);
       }
       //
-      console.log("Set Definition");
       let answer = p[c].word;
       setWord(p[c].word);
       setDef(p[c].def);
       //
-      console.log("Randomize");
       let wordArr = words.filter((w) => w !== answer);
+      wordArr = shuffle(wordArr);
       wordArr = wordArr.slice(0, 3);
       wordArr.push(answer);
       wordArr = _.shuffle(wordArr);
       //
-      console.log("Set Options");
       setOpt_1(wordArr[0]);
       setOpt_2(wordArr[1]);
       setOpt_3(wordArr[2]);
@@ -186,25 +203,6 @@ function useTestSection() {
     }
     return array;
   }
-  useEffect(() => {
-    console.log("pre-timer");
-    if (start) {
-      console.log("timer");
-      timeout = setTimeout(() => {
-        if (timeCount === 0) {
-          setScore();
-          setTimeCount(time);
-          setDefinition();
-        } else if (timeCount > 0) {
-          setTimeCount(timeCount - 1);
-        }
-      }, 1000);
-    }
-  }, [timeCount]);
-
-  useEffect(() => {
-    init();
-  }, [poolIndexes, time]);
 
   return {
     right,
@@ -221,6 +219,8 @@ function useTestSection() {
     option,
     disabledOpt,
     disableDrill,
+    startedBefore,
+    stop,
     setRight,
     setWrong,
     setOpt_1,

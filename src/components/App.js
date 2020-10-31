@@ -5,11 +5,8 @@ import GlobalContext from "./contexts/GlobalContext";
 import Range from "./Range";
 import TestSection from "./TestSection";
 import useRange from "./hooks/useRange";
-import Timer from "./Timer";
 import InputExcelCSV from "./Utils/InputExcelCSV";
 //
-import TestContext from "./TestContext";
-import TestComponent from "./TestComponent";
 export default function App() {
   const {
     totalWords,
